@@ -1,0 +1,34 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Gemiweb</title>
+
+  <meta name="description" content="A Gemini-Web Proxy.">
+  <meta name="author" content="Alex">
+</head>
+
+<body>
+    {% for node in nodes %}
+        {% if node.type == "TEXT" %}
+            {{ node.text }} </br>
+        {% elif node.type == "LINK" %}
+            <a href="{{ node.url }}">{{ node.fancyname }}</a> </br>
+        {% elif node.type == "HEADER" %}
+            <h{{ node.level }}>{{ node.parsedText }}</h{{ node.level }}>
+        {% elif node.type == "DIVIDER" and node.subtype == "BULLET_START" %}
+            <ul>
+        {% elif node.type == "DIVIDER" and node.subtype == "BULLET_END" %}
+            </ul>
+        {% elif node.type == "BULLET" %}
+            <li>{{ node.text }}</li>
+        {% elif node.type == "DIVIDER" and node.subtype == "PRE_START" %}
+            <code>
+        {% elif node.type == "DIVIDER" and node.subtype == "PRE_END" %}
+            </code>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>
