@@ -1,0 +1,30 @@
+body {
+    background: #2d2a2e;
+    color: #939293;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+    border-bottom: 0px;
+    text-decoration: none;
+    outline: 0;
+    color: #64aeff;
+    position: relative;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    color: #4a83c0;
+}

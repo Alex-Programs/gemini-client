@@ -2,6 +2,7 @@ import cgi
 import socket
 import ssl
 import urllib.parse
+import ignition
 
 class Success():
     def __init__(self, body, mime):
@@ -34,62 +35,47 @@ class Err():
     def represent(self):
         return f"[Mime: {self.mime}, Status: {self.status}, Message: {self.message}]"
 
-def absolutise_url(base, relative):
-    # Absolutise relative links
-    if "://" not in relative:
-        # Python's URL tools somehow only work with known schemes?
-        base = base.replace("gemini://","http://")
-        relative = urllib.parse.urljoin(base, relative)
-        relative = relative.replace("http://", "gemini://")
-    return relative
+def add_redirect_data(text, count):
+    if count != 0:
+        return f"""
+INJECTED: Redirect count is {count}
+
+{text}
+"""
+    
+    return text
 
 def get(url):
-    # Do the Gemini transaction
-    parsed_url = urllib.parse.urlparse(url)
+    redirect_limit = 5
 
-    try:
-        while True:
-            s = socket.create_connection((parsed_url.netloc, 1965))
-            context = ssl.SSLContext()
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-            s = context.wrap_socket(s, server_hostname = parsed_url.netloc)
-            s.sendall((url + '\r\n').encode("UTF-8"))
-            # Get header and check for redirects
-            fp = s.makefile("rb")
-            header = fp.readline()
-            header = header.decode("UTF-8").strip()
-            status, mime = header.split()
-            # Handle input requests
-            if status.startswith("1"):
-                # Prompt
-                query = input("INPUT" + mime + "> ")
-                url += "?" + urllib.parse.quote(query) # Bit lazy...
-            # Follow redirects
-            elif status.startswith("3"):
-                url = absolutise_url(url, mime)
-                parsed_url = urllib.parse.urlparse(url)
-            # Otherwise, we're done.
-            else:
-                break
-    except Exception as err:
-        return Err(None, None, err)
+    for redirect_count in range(redirect_limit):
+        response = ignition.request(url)
 
-    # Fail if transaction was not successful
-    if not status.startswith("2"):
-        return Err(status, mime, None)
+        if response.is_a(ignition.SuccessResponse):
+            return Success(add_redirect_data(response.data(), redirect_count), response.meta)
 
-    # Handle text
-    if mime.startswith("text/"):
-        # Decode according to declared charset
-        mime, mime_opts = cgi.parse_header(mime)
-        body = fp.read()
-        body = body.decode(mime_opts.get("charset","UTF-8"))
-        
-        return Success(body, mime)
-    # Handle non-text
-    else:
-        return Success(fp.read(), mime)
+        elif response.is_a(ignition.InputResponse):
+            return Err(response.status, response.meta, "Ignition Error: Additional input required. Response: " + add_redirect_data(response.data(), redirect_count))
+
+        elif response.is_a(ignition.RedirectResponse):
+            url = response.data().split(" ")[-1]
+
+        elif response.is_a(ignition.TempFailureResponse):
+            return Err(response.status, response.meta, "Server Error: Temporary Failure. Response: " + add_redirect_data(response.data(), redirect_count))
+
+        elif response.is_a(ignition.PermFailureResponse):
+            return Err(response.status, response.meta, "Server Error: Perm Failure. Response: " + add_redirect_data(response.data(), redirect_count))
+
+        elif response.is_a(ignition.ClientCertRequiredResponse):
+            return Err(response.status, response.meta, "Client Certificate Required. Response: " + add_redirect_data(response.data(), redirect_count))
+
+        elif response.is_a(ignition.ErrorResponse):
+            return Err(response.status, response.meta, "Error Has Occured: " + add_redirect_data(response.data(), redirect_count))
+
+        else:
+            return Err(response.status, response.meta, "Particularly Bad Error - there is no handling for the situation. Data:" + add_redirect_data(response.data(), redirect_count))
+
+    
 
 if __name__ == "__main__":
     print(str(get("gemini://distro.tube")))

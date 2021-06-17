@@ -12,8 +12,6 @@ app = Flask(__name__)
 def index():
     uri = request.args.get("gemini")
 
-    #TODO Error handling
-
     resp = get.get(uri)
 
     if resp.type == "ERR":

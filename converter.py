@@ -17,6 +17,7 @@ class Link(Node):
         self.baseurl = baseurl
 
         self.url = self.fix_relative(url)
+        print(str(self.url))
 
         if fancyname:
             self.fancyname = fancyname
@@ -25,9 +26,17 @@ class Link(Node):
             self.fancyname = url
 
     def fix_relative(self, url):
-        return "/?gemini=" + self.absolutise_url(self.baseurl, url)
+        absoluted = self.absolutise_url(self.baseurl, url)
+
+        text = "/?gemini=" + absoluted
+
+        result = "/" + text.replace("//", "/")[1:].replace("/", "//", 1)
+
+        return result
 
     def absolutise_url(self, base, relative):
+        if relative[0] != "/":
+            relative = "/" + relative
         if "://" not in relative:
             relative = base + relative
         return relative
@@ -54,6 +63,8 @@ def convert(text, baseurl):
     doPre = False
     bullets = False
 
+    whitespaces = [" ", "\t"]
+
     for line in lines:
         plain = line
         show = True
@@ -69,24 +80,24 @@ def convert(text, baseurl):
             url = None
             userFriendly = None
 
-            if line[2] == " ":
-                line = line.replace(" ", "", 1)
+            urlStart = None
 
-            if " " in line:
-                line = line.split(" ")
+            i = 2
+            while True:
+                i += 1
 
-                url = line[0][2:]
+                if line[i] not in whitespaces:
+                    urlStart = i
+                    break
 
-                if len(line) > 1:
-                    index = 0
-                    userFriendly = ""
-                    for part in line:
-                        index += 1
-                        if index != 1:
-                            userFriendly += part + " "
+            while line[i] not in whitespaces and i < len(line) - 1:
+                i += 1
 
-            else:
-                url = line[2:].replace(" ", "")
+            urlEnd = i
+
+            url = line[urlStart:urlEnd]
+
+            userFriendly = line[urlEnd+1:]
 
             nodes.append(Link(plain, url, userFriendly, baseurl))
 
