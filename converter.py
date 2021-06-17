@@ -16,8 +16,13 @@ class Link(Node):
         super().__init__(text, True, "LINK")
         self.baseurl = baseurl
 
+        #print("Base URL: " + self.baseurl)
+        #print("Original URL: " + url)
+
         self.url = self.fix_relative(url)
-        print(str(self.url))
+
+        #print("Changed URL: " + self.url)
+        #print("_----------------------------_")
 
         if fancyname:
             self.fancyname = fancyname
@@ -26,20 +31,12 @@ class Link(Node):
             self.fancyname = url
 
     def fix_relative(self, url):
-        absoluted = self.absolutise_url(self.baseurl, url)
-
-        text = "/?gemini=" + absoluted
-
-        result = "/" + text.replace("//", "/")[1:].replace("/", "//", 1)
-
-        return result
-
-    def absolutise_url(self, base, relative):
-        if relative[0] != "/":
-            relative = "/" + relative
-        if "://" not in relative:
-            relative = base + relative
-        return relative
+        if not url.startswith("gemini://"):
+            if url[0] == "/":
+                url = self.baseurl + url
+            else:
+                url = self.baseurl + "/" + url
+        return "?gemini=" + url
 
 class Header(Node):
     def __init__(self, text, raw, level):
