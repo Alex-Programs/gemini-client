@@ -38,4 +38,4 @@ def index():
 def send_assets(path):
     return send_from_directory("assets/", path)
 
-app.run(host="0.0.0.0", port=7020, debug=True)
+app.run(host="0.0.0.0", port=7020)
