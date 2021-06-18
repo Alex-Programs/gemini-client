@@ -70,7 +70,7 @@ def get(url):
             return Err(response.status, response.meta, "Client Certificate Required. Response: " + add_redirect_data(response.data(), redirect_count))
 
         elif response.is_a(ignition.ErrorResponse):
-            return Err(response.status, response.meta, "Error Has Occured: " + add_redirect_data(response.data(), redirect_count))
+            return Err(response.status, response.meta, "Error Has Occured: " + str(add_redirect_data(response.data(), redirect_count)))
 
         else:
             return Err(response.status, response.meta, "Particularly Bad Error - there is no handling for the situation. Data:" + add_redirect_data(response.data(), redirect_count))
