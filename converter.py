@@ -92,7 +92,7 @@ def convert(text, baseurl):
 
             urlEnd = i
 
-            url = line[urlStart:urlEnd]
+            url = line[urlStart:urlEnd+1]
 
             userFriendly = line[urlEnd+1:]
 
