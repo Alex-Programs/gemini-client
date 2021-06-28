@@ -7,9 +7,8 @@ class Node():
         self.type = _type
 
 class Text(Node):
-    def __init__(self, text, pre):
+    def __init__(self, text):
         super().__init__(text, True, "TEXT")
-        self.pre = pre
 
 class Link(Node):
     def __init__(self, text, url, fancyname, baseurl):
@@ -67,11 +66,14 @@ def convert(text, baseurl):
         show = True
 
         if line.startswith("```"):
-            if not doPre:
+            if doPre:
+                doPre = False
+                nodes.append(Divider("PRE_END"))
+                line = line[3:]
+            else:
+                doPre = True
                 nodes.append(Divider("PRE_START"))
-
-            doPre = (doPre == False)
-            show = False
+                line = line[3:]
 
         if line.startswith("=>") and not doPre:
             url = None
@@ -121,10 +123,7 @@ def convert(text, baseurl):
                 bullets = False
                 nodes.append(Divider("BULLET_END"))
 
-            if doPre:
-                nodes.append(Divider("PRE_END"))
-
-            nodes.append(Text(line, doPre))
+            nodes.append(Text(line))
 
     return nodes
 

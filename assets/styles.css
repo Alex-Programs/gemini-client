@@ -15,6 +15,10 @@ body {
     margin: auto;
 }
 
+code {
+    font-family: "JetBrainsMono", monospace;
+}
+
 h1,
 h2,
 h3,
